@@ -25,10 +25,6 @@ let persons = [
   }
 ]
 
-app.get('/api/persons', (request, response) => {
-  response.send(persons)
-})
-
 app.get('/info', (request, response) => {
   const d = new Date()
 
@@ -37,6 +33,10 @@ app.get('/info', (request, response) => {
     <p>${d}</p>
   `
   response.send(data)
+})
+
+app.get('/api/persons', (request, response) => {
+  response.send(persons)
 })
 
 app.get('/api/persons/:id', (request, response) => {
@@ -67,21 +67,31 @@ const generateId = () => {
 app.post('/api/persons', (request, response) => {
   const body = request.body
 
-  if (!body.content) {
+  if (!body.name) {
     return response.status(400).json({ 
-      error: 'content missing' 
+      error: 'name missing' 
+    })
+  }
+  else if (persons.map(person => person.name).includes(body.name)) {
+    return response.status(400).json({ 
+      error: 'name must be unique' 
+    })
+  }
+  else if (!body.number) {
+    return response.status(400).json({ 
+      error: 'number missing' 
     })
   }
 
-  const note = {
-    content: body.content,
-    important: body.important || false,
+  const person = {
+    name: body.name,
+    number: body.number,
     id: generateId(),
   }
 
-  persons = persons.concat(note)
+  persons = persons.concat(person)
 
-  response.json(note)
+  response.json(person)
 })
 
 const PORT = 3001

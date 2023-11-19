@@ -29,6 +29,16 @@ app.get('/api/persons', (request, response) => {
   response.send(persons)
 })
 
+app.get('/info', (request, response) => {
+  const d = new Date()
+
+  const data = `
+    <p>Phonebook has info for ${persons.length} people</p>
+    <p>${d}</p>
+  `
+  response.send(data)
+})
+
 app.get('/api/persons/:id', (request, response) => {
   const id = Number(request.params.id)
   const note = persons.find(note => note.id === id)

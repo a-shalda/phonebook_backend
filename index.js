@@ -65,11 +65,17 @@ app.use(cors())
 app.get('/info', (request, response) => {
   const d = new Date()
 
-  const data = `
-    <p>Phonebook has info for ${persons.length} people</p>
-    <p>${d}</p>
-  `
+  Person.find({}).then(people => {
+    const data = 
+    `
+      <p>Phonebook has info for ${people.length} people</p>
+      <p>${d}</p>
+    `
+
   response.send(data)
+  })
+
+
 })
 
 app.get('/api/persons', (request, response) => {
@@ -120,38 +126,55 @@ app.delete('/api/persons/:id', (request, response, next) => {
 //   return maxId + 1
 // }
 
-app.post('/api/persons', (request, response) => {
+app.post('/api/persons', (request, response, next) => {
   const body = request.body
 
   if (!body.name) {
+    console.log('!body.name')
     return response.status(400).json({ 
       error: 'name missing' 
     })
   }
-  // else if (Person.map(person => person.name).includes(body.name)) {
-  //   return response.status(400).json({ 
-  //     error: 'name must be unique' 
-  //   })
-  // }
   else if (!body.number) {
+    console.log('!body.number')
+
     return response.status(400).json({ 
       error: 'number missing' 
     })
   }
+  else  {
 
-  const person = new Person ({
-    name: body.name,
-    number: body.number,
-    // id: generateId(),
-  })
+    Person.find({name: body.name}).then(people => {
+      let id = people.map(person => person.id)[0]
 
-  person.save().then(savedPerson => {
-    console.log(`Added ${person.name} number ${person.number} to phonebook`)
-    response.json(savedPerson)
-    // mongoose.connection.close()
-  })
+      if (id) {
+        console.log(id, 'found')
+        const person = {
+          name: body.name,
+          number: body.number,
+        }
+        Person.findByIdAndUpdate(id, person, { new: true })
+          .then(updatedPerson => {
+            response.json(updatedPerson)
+          })
+          .catch(error => next(error))
+      }
+      else if (!id) {
+      
+        console.log(id, 'not found')
 
-  // Person = Person.concat(person)
+        const person = new Person ({
+          name: body.name,
+          number: body.number,
+        })
+
+        person.save().then(savedPerson => {
+          console.log(`Added ${person.name} number ${person.number} to phonebook`)
+          response.json(savedPerson)
+        })
+      }
+    })
+  }
 })
 
 app.put('/api/persons/:id', (request, response, next) => {
@@ -179,8 +202,6 @@ const PORT = process.env.PORT
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })
-
-
 
 const errorHandler = (error, request, response, next) => {
   console.error(error.message)

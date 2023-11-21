@@ -14,21 +14,6 @@ app.use(cors())
 
 app.use(express.static('dist'))
 
-const errorHandler = (error, request, response, next) => {
-  console.error(error.message)
-
-  if (error.name === 'CastError') {
-    return response.status(400).send({ error: 'malformatted id' })
-  } else if (error.name === 'ValidationError') {
-
-    return response.status(400).json({ error: error.message })
-  }
-  next(error)
-}
-
-app.use(errorHandler)
-
-
 app.get('/info', (request, response) => {
   const d = new Date()
 
@@ -119,3 +104,17 @@ const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })
+
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message)
+
+  if (error.name === 'CastError') {
+    return response.status(400).send({ error: 'malformatted id' })
+  } else if (error.name === 'ValidationError') {
+
+    return response.status(400).json({ error: error.message })
+  }
+  next(error)
+}
+
+app.use(errorHandler)
